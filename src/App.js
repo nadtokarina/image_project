@@ -1,9 +1,12 @@
 import ImageUploader from "./ImageUploader";
+import "./styles/App.scss";
 
 function App() {
   return (
     <div className="App">
-      <ImageUploader />
+      <div>
+        <ImageUploader />
+      </div>
     </div>
   );
 }
