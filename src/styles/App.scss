@@ -1,8 +1,22 @@
 .App {
-    background-color: #262626 ;
-    margin: -50px;
-    padding: 50px;
-    width: 100%;
-    min-height: 800px;
+    background-color: #332a28 ;
+    width: 100vw;
+    height: 100vh;
+};
 
+.info-wrapper {
+    display: flex;
 }
+
+.modal-button {
+    appearance: none;
+    background-color: #403a3a;
+    border: 0;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 15px;
+    padding: 3px;
+    height: 40px;
+    margin-top: -1px;
+}
+
