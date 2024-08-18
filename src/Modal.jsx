@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import './styles/Modal.scss';
 import { Tooltip } from 'react-tooltip';
+import './styles/Modal.scss';
 
 const Modal = ({ isOpen, onClose, imageData, onResize }) => {
   const [resizeMode, setResizeMode] = useState('percentage');
@@ -57,13 +57,12 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
     setResizedWidth(newWidth);
     setResizedHeight(newHeight);
 
-    // Call the resize function passed from parent component
     onResize(newWidth, newHeight);
 
-    onClose(); // Закрытие модального окна
+    onClose();
   };
 
-  const calculatePixels = (width, height) => (width * height) / 1000000; // Convert to megapixels
+  const calculatePixels = (width, height) => (width * height) / 1000000;
 
   return (
     isOpen ? ReactDOM.createPortal(
@@ -115,10 +114,14 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
               <select>
                 <option value="nearest">Ближайшего соседа</option>
               </select>
-              <Tooltip id="tooltip" place="top" effect="solid">
-                Алгоритм ближайшего соседа - простейший метод интерполяции, при котором значение пикселя определяется по значению ближайшего к нему пикселя исходного изображения.
+              <div className="tooltip-wrapper" id="tooltip" data-tooltip-place='right'>?</div>
+              <Tooltip anchorSelect="#tooltip">
+                <span className="tooltip-text">
+                Интерполяция методом ближайшего соседа — метод интерполяции, при котором 
+                <br/>в качестве промежуточного значения выбирается ближайшее известное значение функции. 
+                <br/>Интерполяция методом ближайшего соседа является самым простым методом интерполяции.
+                </span>
               </Tooltip>
-              <span data-tip data-for="tooltip">?</span>
             </label>
           </div>
           <div>
@@ -135,22 +138,3 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
 };
 
 export default Modal;
-
-
-// import './styles/Modal.scss'; // Подключение стилей
-
-// const Modal = ({ isOpen, onClose}) => {
-//   if (!isOpen) return null; // Если модальное окно закрыто, ничего не рендерим
-
-
-//   return (
-//     <div className="modal-overlay">
-//       <div className="modal-content">
-//         <h2>Модальное окно</h2>
-//         <button className="close-button" onClick={onClose}>Закрыть</button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Modal;

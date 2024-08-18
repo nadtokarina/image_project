@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import Modal from './Modal'; // Импортируем компонент Modal
+import Modal from './Modal'; 
 import './styles/ImageUploader.scss';
 
 const ImageUploader = () => {
@@ -9,6 +9,10 @@ const ImageUploader = () => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [pixelInfo, setPixelInfo] = useState({ x: 0, y: 0, rgb: 'N/A' });
   const [modalOpen, setModalOpen] = useState(false);
+  const [isHandToolActive, setIsHandToolActive] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [resizedImageSize, setResizedImageSize] = useState({ width: 0, height: 0 });
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -38,13 +42,19 @@ const ImageUploader = () => {
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
 
-      const scaledWidth = img.width * newScale;
-      const scaledHeight = img.height * newScale;
+      const scaledWidth = resizedImageSize.width || img.width * newScale;
+      const scaledHeight = resizedImageSize.height || img.height * newScale;
 
       const currentScale = scale || newScale;
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(img, (canvasWidth - scaledWidth * currentScale) / 2, (canvasHeight - scaledHeight * currentScale) / 2, scaledWidth * currentScale, scaledHeight * currentScale);
+      ctx.drawImage(
+        img,
+        (canvasWidth - scaledWidth * currentScale) / 2 + offset.x,
+        (canvasHeight - scaledHeight * currentScale) / 2 + offset.y,
+        scaledWidth * currentScale,
+        scaledHeight * currentScale
+      );
 
       setImageSize({ width: img.width, height: img.height });
     };
@@ -54,13 +64,11 @@ const ImageUploader = () => {
     if (imageSrc) {
       drawImageOnCanvas(imageSrc);
     }
-  }, [imageSrc]);
+  }, [imageSrc, scale, offset, resizedImageSize]);
 
-  useEffect(() => {
-    if (imageSrc) {
-      drawImageOnCanvas(imageSrc);
-    }
-  }, [scale]);
+  const handleResize = (newWidth, newHeight) => {
+    setResizedImageSize({ width: newWidth, height: newHeight });
+  };
 
   const getColorAtPosition = (x, y) => {
     const canvas = canvasRef.current;
@@ -77,27 +85,67 @@ const ImageUploader = () => {
     const y = e.clientY - rect.top;
     const rgb = getColorAtPosition(x, y);
     setPixelInfo({ x, y, rgb });
+
+    if (isHandToolActive && startPos.x !== 0) {
+      const dx = e.clientX - startPos.x;
+      const dy = e.clientY - startPos.y;
+      setOffset((prevOffset) => ({
+        x: prevOffset.x + dx,
+        y: prevOffset.y + dy,
+      }));
+      setStartPos({ x: e.clientX, y: e.clientY });
+    }
   };
 
   const handleClick = (e) => {
     handleMouseMove(e);
   };
 
-  const handleScaleChange = (e) => {
-    setScale(Number(e.target.value) / 100);
+  const handleMouseDown = (e) => {
+    if (isHandToolActive) {
+      setStartPos({ x: e.clientX, y: e.clientY });
+    }
   };
 
-  const handleResize = (newWidth, newHeight) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.src = imageSrc;
+  const handleMouseUp = () => {
+    setStartPos({ x: 0, y: 0 });
+  };
 
-    img.onload = () => {
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+  const handleKeyDown = (e) => {
+    if (isHandToolActive) {
+      switch (e.key) {
+        case 'ArrowUp':
+          setOffset((prevOffset) => ({ ...prevOffset, y: prevOffset.y - 10 }));
+          break;
+        case 'ArrowDown':
+          setOffset((prevOffset) => ({ ...prevOffset, y: prevOffset.y + 10 }));
+          break;
+        case 'ArrowLeft':
+          setOffset((prevOffset) => ({ ...prevOffset, x: prevOffset.x - 10 }));
+          break;
+        case 'ArrowRight':
+          setOffset((prevOffset) => ({ ...prevOffset, x: prevOffset.x + 10 }));
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isHandToolActive) {
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      window.removeEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
+  }, [isHandToolActive]);
+
+  const handleScaleChange = (e) => {
+    setScale(Number(e.target.value) / 100);
   };
 
   const handleSaveImage = () => {
@@ -120,6 +168,12 @@ const ImageUploader = () => {
           </label>
           <button className='scale-button' onClick={() => setModalOpen(true)}>Изменить размер</button>
           <button className='save-button' onClick={handleSaveImage}>Сохранить</button>
+          <button
+            className='hand-tool-button'
+            onClick={() => setIsHandToolActive(!isHandToolActive)}
+          >
+            {isHandToolActive ? 'Выключить инструмент рука' : 'Включить инструмент рука'}
+          </button>
         </div>
         <div className="image-info-wrapper">
           <p>{Math.round(imageSize.width * scale)}x{Math.round(imageSize.height * scale)} px</p>
@@ -139,7 +193,14 @@ const ImageUploader = () => {
         </div>
       </div>
       <div>
-        <canvas className='canvas' ref={canvasRef} onMouseMove={handleMouseMove} onClick={handleClick} />
+        <canvas
+          className='canvas'
+          ref={canvasRef}
+          onMouseMove={handleMouseMove}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onClick={handleClick}
+        />
       </div>
       <Modal
         isOpen={modalOpen}
