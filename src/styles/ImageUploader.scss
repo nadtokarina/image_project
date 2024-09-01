@@ -1,6 +1,15 @@
-.canvas {
+.canvas-container {
+	width: 100%;
+	height: 80vh;
+	overflow: auto;
 	position: relative;
+  }
+
+.canvas {
+	// position: relative;
 	background-color: #332a28 ;
+	display: block;
+	margin: 0 auto;
 }
 
 .input-file {
@@ -34,10 +43,20 @@
 	box-sizing: border-box;
 	border: none;
 	margin: 0;
+
+	&:hover {
+		background-color: #8f8383;
+		-webkit-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+		-moz-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+		box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+	}
 };
 
+
 .info-buttons {
+	width: 100vw;
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
 	margin-top: 10px;
 }
@@ -45,11 +64,15 @@
 .image-info-wrapper {
 	display: flex;
 	align-items: center;
-}
+};
 
 .image-info-wrapper p {
     color: white;
     margin: 10px;
+};
+
+.instruments-wrapper {
+	display: flex;
 };
 
 .scale-button {
@@ -61,21 +84,44 @@
     font-size: 15px;
     padding: 10px 20px;
     height: 40px;
-    margin-top: -1px;
 	margin: 10px;
+
+	&:hover {
+		background-color: #8f8383;
+		-webkit-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+		-moz-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+		box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+	}
 };
 
-.save-button {
-	appearance: none;
-    background-color: #403a3a;
+.instrument-button {
+    background-color: #8f8383;
     border: 0;
     border-radius: 5px;
     color: #fff;
-    font-size: 15px;
-    padding: 10px 20px;
-    height: 40px;
-    margin-top: -1px;
+    padding: 6px 10px 5px 10px;
 	margin: 10px;
-}
+	-webkit-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+	-moz-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+	box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+};
 
+.instrument-unactive-button {
+	background-color: #403a3a;
+	border: 0;
+    border-radius: 5px;
+    color: #fff;
+    padding: 6px 10px 5px 10px;
+	margin: 10px;
+};
+
+.hand-icon {
+	color: #fff;
+};
+
+.picker-icon {
+	color: #fff;
+};
+
+  
 

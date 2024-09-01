@@ -1,6 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Modal from './Modal'; 
+import ColorPanel from './ColorPanel';
 import './styles/ImageUploader.scss';
+import SwipeSharpIcon from '@mui/icons-material/SwipeSharp';
+import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
+
 
 const ImageUploader = () => {
   const [imageSrc, setImageSrc] = useState(null);
@@ -13,6 +17,14 @@ const ImageUploader = () => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [resizedImageSize, setResizedImageSize] = useState({ width: 0, height: 0 });
+  const [isEyedropperActive, setIsEyedropperActive] = useState(false);
+  const [selectedColors, setSelectedColors] = useState({
+    color1: { rgb: ' ', x: 0, y: 0, xyz: '', lab: '' },
+    color2: { rgb: ' ', x: 0, y: 0, xyz: '', lab: '' }
+  });  
+  const [showColorPanel, setShowColorPanel] = useState(false);
+  
+
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -101,11 +113,73 @@ const ImageUploader = () => {
     handleMouseMove(e);
   };
 
-  const handleMouseDown = (e) => {
-    if (isHandToolActive) {
-      setStartPos({ x: e.clientX, y: e.clientY });
-    }
+
+const rgbToXyz = (r, g, b) => {
+  const normalize = (v) => v / 255;
+  const rgb = [normalize(r), normalize(g), normalize(b)].map((v) => {
+    return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92;
+  });
+
+  const [rLin, gLin, bLin] = rgb;
+
+  // Применение матрицы преобразования
+  const x = rLin * 0.4124 + gLin * 0.3576 + bLin * 0.1805;
+  const y = rLin * 0.2126 + gLin * 0.7152 + bLin * 0.0722;
+  const z = rLin * 0.0193 + gLin * 0.1192 + bLin * 0.9505;
+
+  return { x: x * 100, y: y * 100, z: z * 100 };
+};
+
+const xyzToLab = (x, y, z) => {
+  const whiteRef = rgbToXyz(255, 255, 255);
+
+  const normalize = (v, ref) => v / ref;
+  const f = (t) => {
+    return t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + (16 / 116);
   };
+
+  const fx = f(normalize(x, whiteRef.x));
+  const fy = f(normalize(y, whiteRef.y));
+  const fz = f(normalize(z, whiteRef.z));
+
+  const l = (116 * fy) - 16;
+  const a = 500 * (fx - fy);
+  const b = 200 * (fy - fz);
+
+  return { l, a, b };
+};
+
+const handleMouseDown = (e) => {
+  if (isEyedropperActive) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const rgb = getColorAtPosition(x, y);
+
+    const [r, g, b] = rgb.match(/\d+/g).map(Number);
+    const xyz = rgbToXyz(r, g, b);
+    const lab = xyzToLab(xyz.x, xyz.y, xyz.z);
+
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      setSelectedColors((prevColors) => ({
+        ...prevColors,
+        color2: { rgb, x: Math.round(x), y: Math.round(y), xyz, lab }
+      }));
+    } else {
+      setSelectedColors((prevColors) => ({
+        ...prevColors,
+        color1: { rgb, x: Math.round(x), y: Math.round(y), xyz, lab }
+      }));
+    }
+    setShowColorPanel(true);
+  }
+
+  if (isHandToolActive) {
+    setStartPos({ x: e.clientX, y: e.clientY });
+  }
+};
+ 
 
   const handleMouseUp = () => {
     setStartPos({ x: 0, y: 0 });
@@ -162,18 +236,22 @@ const ImageUploader = () => {
     <div className='UploaderWrapper'>
       <div className="info-panel">
         <div className="info-buttons">
-          <label className='input-file'>
-            <input className='upload-button' type="file" accept="image/*" onChange={handleImageUpload} />
-            <span className='upload-label'>Загрузить фото</span>
-          </label>
-          <button className='scale-button' onClick={() => setModalOpen(true)}>Изменить размер</button>
-          <button className='save-button' onClick={handleSaveImage}>Сохранить</button>
-          <button
-            className='hand-tool-button'
-            onClick={() => setIsHandToolActive(!isHandToolActive)}
-          >
-            {isHandToolActive ? 'Выключить инструмент рука' : 'Включить инструмент рука'}
-          </button>
+          <div className="change-buttons">
+            <label className='input-file'>
+              <input className='upload-button' type="file" accept="image/*" onChange={handleImageUpload} />
+              <span className='upload-label'>Загрузить фото</span>
+            </label>
+            <button className='scale-button' onClick={() => setModalOpen(true)}>Изменить размер</button>
+            <button className='scale-button' onClick={handleSaveImage}>Сохранить</button>  
+          </div>
+          <div className="instruments-wrapper">
+            <p className={isHandToolActive ? 'instrument-button' : 'instrument-unactive-button'}  onClick={() => setIsHandToolActive(!isHandToolActive)}>
+              <SwipeSharpIcon className='hand-icon'/>
+            </p>
+            <p className={isEyedropperActive ? 'instrument-button' : 'instrument-unactive-button'} onClick={() => setIsEyedropperActive(!isEyedropperActive)}>
+              <ColorizeSharpIcon className='picker-icon'/>
+            </p>
+          </div>
         </div>
         <div className="image-info-wrapper">
           <p>{Math.round(imageSize.width * scale)}x{Math.round(imageSize.height * scale)} px</p>
@@ -191,8 +269,14 @@ const ImageUploader = () => {
             <span>{Math.round(scale * 100)}%</span>
           </label>
         </div>
+        {showColorPanel && (
+          <ColorPanel
+            selectedColors={selectedColors}
+            onClose={() => setShowColorPanel(false)}
+          />
+        )}
       </div>
-      <div>
+      <div className='canvas-container'> 
         <canvas
           className='canvas'
           ref={canvasRef}
