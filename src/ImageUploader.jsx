@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Modal from './Modal'; 
 import ColorPanel from './ColorPanel';
+import Curves from './Curves';
 import './styles/ImageUploader.scss';
 import SwipeSharpIcon from '@mui/icons-material/SwipeSharp';
 import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
@@ -23,8 +24,8 @@ const ImageUploader = () => {
     color2: { rgb: ' ', x: 0, y: 0, xyz: '', lab: '' }
   });  
   const [showColorPanel, setShowColorPanel] = useState(false);
+  const [curvesOpen, setCurvesOpen] = useState(false);
   
-
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -88,7 +89,7 @@ const ImageUploader = () => {
     const imageData = ctx.getImageData(x, y, 1, 1).data;
     const rgb = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
     return rgb;
-  };
+  };  
 
   const handleMouseMove = (e) => {
     const canvas = canvasRef.current;
@@ -122,7 +123,6 @@ const rgbToXyz = (r, g, b) => {
 
   const [rLin, gLin, bLin] = rgb;
 
-  // Применение матрицы преобразования
   const x = rLin * 0.4124 + gLin * 0.3576 + bLin * 0.1805;
   const y = rLin * 0.2126 + gLin * 0.7152 + bLin * 0.0722;
   const z = rLin * 0.0193 + gLin * 0.1192 + bLin * 0.9505;
@@ -177,9 +177,7 @@ const handleMouseDown = (e) => {
 
   if (isHandToolActive) {
     setStartPos({ x: e.clientX, y: e.clientY });
-  }
-};
- 
+  }};
 
   const handleMouseUp = () => {
     setStartPos({ x: 0, y: 0 });
@@ -231,6 +229,36 @@ const handleMouseDown = (e) => {
     link.download = 'scaled-image.png';
     link.click();
   };
+
+  const applyCurvesCorrection = (lookupTable) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const r = imageData.data[i];
+      const g = imageData.data[i + 1];
+      const b = imageData.data[i + 2];
+  
+      imageData.data[i] = lookupTable[r];
+      imageData.data[i + 1] = lookupTable[g];
+      imageData.data[i + 2] = lookupTable[b];
+    }
+  
+    ctx.putImageData(imageData, 0, 0);
+  };  
+  
+  
+  const handleApplyCurves = (correctionData) => {
+    const { lookupTable } = correctionData;
+    applyCurvesCorrection(lookupTable);
+    
+    const canvas = canvasRef.current;
+    const newImageData = canvas.toDataURL('image/png');
+    setImageSrc(newImageData);
+  };
+  
+  
 
   return (
     <div className='UploaderWrapper'>
@@ -286,6 +314,14 @@ const handleMouseDown = (e) => {
           onClick={handleClick}
         />
       </div>
+      <button onClick={() => setCurvesOpen(true)}>Коррекция "Кривые"</button>
+    {curvesOpen && (
+      <Curves
+        onClose={() => setCurvesOpen(false)}
+        onApplyCorrection={handleApplyCurves}
+        imageData={imageSrc}
+      />
+    )}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
