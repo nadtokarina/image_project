@@ -252,14 +252,48 @@ const handleMouseDown = (e) => {
   const handleApplyCurves = (correctionData) => {
     const { lookupTable } = correctionData;
     applyCurvesCorrection(lookupTable);
-    
-    const canvas = canvasRef.current;
-    const newImageData = canvas.toDataURL('image/png');
-    setImageSrc(newImageData);
+  
+    const newWidth = resizedImageSize.width;
+    const newHeight = resizedImageSize.height;
+  
+    if (newWidth && newHeight) {
+      nearestNeighborResize(canvasRef.current, newWidth, newHeight);
+      const newImageData = canvasRef.current.toDataURL('image/png');
+      setImageSrc(newImageData);
+    }
   };
   
   
-
+  const nearestNeighborResize = (imageData, newWidth, newHeight) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+  
+    const resizedImage = ctx.createImageData(newWidth, newHeight);
+    const oldWidth = canvas.width;
+    const oldHeight = canvas.height;
+    const oldData = ctx.getImageData(0, 0, oldWidth, oldHeight).data;
+  
+    for (let y = 0; y < newHeight; y++) {
+      for (let x = 0; x < newWidth; x++) {
+        const srcX = Math.floor((x / newWidth) * oldWidth);
+        const srcY = Math.floor((y / newHeight) * oldHeight);
+  
+        const oldIndex = (srcY * oldWidth + srcX) * 4;
+        const newIndex = (y * newWidth + x) * 4;
+  
+        resizedImage.data[newIndex] = oldData[oldIndex];
+        resizedImage.data[newIndex + 1] = oldData[oldIndex + 1];
+        resizedImage.data[newIndex + 2] = oldData[oldIndex + 2];
+        resizedImage.data[newIndex + 3] = oldData[oldIndex + 3]; 
+      }
+    }
+  
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.putImageData(resizedImage, 0, 0);
+  };
+  
+  
+  
   return (
     <div className='UploaderWrapper'>
       <div className="info-panel">
@@ -270,6 +304,7 @@ const handleMouseDown = (e) => {
               <span className='upload-label'>Загрузить фото</span>
             </label>
             <button className='scale-button' onClick={() => setModalOpen(true)}>Изменить размер</button>
+            <button className='scale-button' onClick={() => setCurvesOpen(true)}>Коррекция "Кривые"</button>
             <button className='scale-button' onClick={handleSaveImage}>Сохранить</button>  
           </div>
           <div className="instruments-wrapper">
@@ -282,7 +317,7 @@ const handleMouseDown = (e) => {
           </div>
         </div>
         <div className="image-info-wrapper">
-          <p>{Math.round(imageSize.width * scale)}x{Math.round(imageSize.height * scale)} px</p>
+          <p>Ширина: {Math.round(imageSize.width * scale)} Высота:{Math.round(imageSize.height * scale)}</p>
           <p>X: {Math.round(pixelInfo.x)}, Y: {Math.round(pixelInfo.y)}</p>
           <p>{pixelInfo.rgb}</p>
           <label>
@@ -314,7 +349,6 @@ const handleMouseDown = (e) => {
           onClick={handleClick}
         />
       </div>
-      <button onClick={() => setCurvesOpen(true)}>Коррекция "Кривые"</button>
     {curvesOpen && (
       <Curves
         onClose={() => setCurvesOpen(false)}

@@ -124,11 +124,12 @@ const Curves = ({ onClose, onApplyCorrection, imageData }) => {
   return (
     <div className='curves-modal'>
       <div className='curves-content'>
-        <h3>Градационная коррекция "Кривые"</h3>
+        <p className='curves-title'>Градационная коррекция "Кривые"</p>
         {previewEnabled && newData ? (
           <img src={newData} alt="Preview" style={{ width: '100%', height: 'auto' }} />
         ) : (
-          <VictoryChart width={400} height={400} domain={{ x: [0, 255], y: [0, 255] }}>
+          <VictoryChart   style={{ parent: { background: "#fff" }}}
+            width={400} height={400} domain={{ x: [0, 255], y: [0, 255] }}>
             <VictoryGroup>
               <VictoryArea 
                 data={normalizeHistogram(histograms.r).map((y, x) => ({ x, y }))}
@@ -218,7 +219,7 @@ const Curves = ({ onClose, onApplyCorrection, imageData }) => {
           </label>
         </div>
 
-        <div className='actions'>
+        <div className='curves-buttons'>
           <button onClick={handleApply}>Применить коррекцию</button>
           <button onClick={resetValues}>Сбросить</button>
           <button onClick={onClose}>Отмена</button>

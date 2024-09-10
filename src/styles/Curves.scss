@@ -1,29 +1,95 @@
 .curves-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  z-index: 1000;
+}
+
+.curves-content {
+  background-color: #403a3a;
+	border: 1px solid #5c5353;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1001;
+}
+
+.curves-title{
+  margin: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+}
+
+.controls > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.controls label {
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #fff;
+}
+
+.controls input {
+  padding: 5px;
+  font-size: 14px;
+  width: 80px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.options {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.options label {
+  font-size: 14px;
+  color: #fff;
+}
+
+.curves-buttons {
+  display: flex;
+  justify-content: left;
+}
+
+.curves-buttons button {
+  appearance: none;
+  background-color: #5c5353;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  padding: 5px 10px;
+  height: 30px;
+  display: inline-block;
+
+  &:hover {
+    background-color: #8f8383;
+    -webkit-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+    -moz-box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
+    box-shadow: -1px -3px 15px 6px rgba(19, 16, 16, 0.2) inset;
   }
-  
-  .curves-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .controls, .actions {
-    margin-top: 20px;
-  }
-  
-  .controls input {
-    margin: 5px;
-  }
-  
-  .actions button {
-    margin: 5px;
-  }
-  
+}
+
+img {
+  max-width: 100%;
+  margin-bottom: 20px;
+}
