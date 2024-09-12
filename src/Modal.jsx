@@ -7,13 +7,14 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
   const [resizeMode, setResizeMode] = useState('percentage');
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
+  const [widthPercentage, setWidthPercentage] = useState('');
+  const [heightPercentage, setHeightPercentage] = useState(''); 
   const [linkDimensions, setLinkDimensions] = useState(true);
   const [originalWidth, setOriginalWidth] = useState(0);
   const [originalHeight, setOriginalHeight] = useState(0);
   const [resizedWidth, setResizedWidth] = useState(0);
   const [resizedHeight, setResizedHeight] = useState(0);
-  const [originalPixels, setOriginalPixels] = useState(0); // Новое состояние для количества пикселей до изменения размера
-  
+  const [originalPixels, setOriginalPixels] = useState(0);
 
   useEffect(() => {
     if (imageData) {
@@ -28,20 +29,29 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
       };
     }
   }, [imageData]);
-  
 
   const handleResize = () => {
     let newWidth = width;
     let newHeight = height;
-  
+
     if (resizeMode === 'percentage') {
-      const percentage = parseFloat(width);
-      if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
-        alert('Введите корректный процент (от 1 до 100)');
+      const widthPercent = parseFloat(widthPercentage);
+      const heightPercent = parseFloat(heightPercentage);
+
+      if (
+        isNaN(widthPercent) ||
+        widthPercent <= 0 ||
+        widthPercent > 100 ||
+        isNaN(heightPercent) ||
+        heightPercent <= 0 ||
+        heightPercent > 100
+      ) {
+        alert('Введите корректные проценты (от 1 до 100) для ширины и высоты');
         return;
       }
-      newWidth = (originalWidth * percentage) / 100;
-      newHeight = (originalHeight * percentage) / 100;
+
+      newWidth = (originalWidth * widthPercent) / 100;
+      newHeight = (originalHeight * heightPercent) / 100;
     } else {
       newWidth = parseFloat(width);
       newHeight = parseFloat(height);
@@ -50,7 +60,7 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
         return;
       }
     }
-  
+
     if (linkDimensions) {
       const ratio = originalWidth / originalHeight;
       if (newWidth > newHeight) {
@@ -59,100 +69,119 @@ const Modal = ({ isOpen, onClose, imageData, onResize }) => {
         newWidth = newHeight * ratio;
       }
     }
-  
+
     setResizedWidth(newWidth);
     setResizedHeight(newHeight);
-  
+
     onResize(newWidth, newHeight);
-  
+
     onClose();
   };
-  
 
   const calculatePixels = (width, height) => (width * height) / 1000000;
 
-  return (
-    isOpen ? ReactDOM.createPortal(
-      <div className='modal-overlay'>
-        <div className='modal-content'>
-          <p className='modal-title'>Изменить размер изображения</p>
-          <div>
-            <label>
-              Изменить в: 
-              <select value={resizeMode} onChange={(e) => setResizeMode(e.target.value)}>
-                <option value="percentage">Процент</option>
-                <option value="pixels">Пиксели</option>
-              </select>
-            </label>
-          </div>
-          <div>
-            {resizeMode === 'pixels' ? (
-              <>
-                <label>
-                  Ширина:
-                  <input
-                    type="text"
-                    value={width}
-                    onChange={(e) => setWidth(e.target.value)}
-                  />
-                </label>
-                <label>
-                  Высота:
-                  <input
-                    type="text"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                  />
-                </label>
-              </>
-            ) : (
+  return isOpen
+    ? ReactDOM.createPortal(
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <p className="modal-title">Изменить размер изображения</p>
+            <div>
               <label>
-                Процент:
+                Изменить в:
+                <select value={resizeMode} onChange={(e) => setResizeMode(e.target.value)}>
+                  <option value="percentage">Процент</option>
+                  <option value="pixels">Пиксели</option>
+                </select>
+              </label>
+            </div>
+            <div>
+              {resizeMode === 'pixels' ? (
+                <>
+                  <label>
+                    Ширина:
+                    <input
+                      type="text"
+                      value={width}
+                      onChange={(e) => setWidth(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Высота:
+                    <input
+                      type="text"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label>
+                    Ширина:
+                    <input
+                      type="text"
+                      value={widthPercentage}
+                      onChange={(e) => setWidthPercentage(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Высота:
+                    <input
+                      type="text"
+                      value={heightPercentage}
+                      onChange={(e) => setHeightPercentage(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+            <div>
+              <label>
+                Связать размеры:
                 <input
-                  type="text"
-                  value={width}
-                  onChange={(e) => setWidth(e.target.value)}
+                  type="checkbox"
+                  checked={linkDimensions}
+                  onChange={() => setLinkDimensions(!linkDimensions)}
                 />
               </label>
-            )}
+            </div>
+            <div>
+              <label style={{ marginTop: '20px' }}>
+                Алгоритм интерполяции:
+                <select>
+                  <option value="nearest">Ближайшего соседа</option>
+                </select>
+                <div className="tooltip-wrapper" id="tooltip" data-tooltip-place="right">
+                  ?
+                </div>
+                <Tooltip anchorSelect="#tooltip">
+                  <span className="tooltip-text">
+                    Интерполяция методом ближайшего соседа — метод интерполяции, при котором
+                    <br />
+                    в качестве промежуточного значения выбирается ближайшее известное значение функции.
+                    <br />
+                    Интерполяция методом ближайшего соседа является самым простым методом интерполяции.
+                  </span>
+                </Tooltip>
+              </label>
+            </div>
+            <div>
+              <p className="modal-information">
+                Общее количество пикселей до изменения размера: {calculatePixels(resizedWidth, resizedHeight) <= 0 ? originalPixels : calculatePixels(resizedWidth, resizedHeight)} Мп
+              </p>
+              <p className="modal-information">
+                Общее количество пикселей после изменения размера: {calculatePixels(resizedWidth, resizedHeight)} Мп
+              </p>
+            </div>
+            <button onClick={handleResize}>Применить</button>
+            <button style={{ marginLeft: '10px' }} onClick={onClose}>
+              Закрыть
+            </button>
           </div>
-          <div>
-            <label>
-              Связать размеры:
-              <input
-                type="checkbox"
-                checked={linkDimensions}
-                onChange={() => setLinkDimensions(!linkDimensions)}
-              />
-            </label>
-          </div>
-          <div>
-            <label style={{ marginTop:'20px'}}>
-              Алгоритм интерполяции:
-              <select>
-                <option value="nearest">Ближайшего соседа</option>
-              </select>
-              <div className="tooltip-wrapper" id="tooltip" data-tooltip-place='right'>?</div>
-              <Tooltip anchorSelect="#tooltip">
-                <span className="tooltip-text">
-                  Интерполяция методом ближайшего соседа — метод интерполяции, при котором 
-                  <br/>в качестве промежуточного значения выбирается ближайшее известное значение функции. 
-                  <br/>Интерполяция методом ближайшего соседа является самым простым методом интерполяции.
-                </span>
-              </Tooltip>
-            </label>
-          </div>
-          <div>
-            <p className='modal-information'>Общее количество пикселей до изменения размера: {originalPixels} Мп</p>
-            <p className='modal-information'>Общее количество пикселей после изменения размера: {calculatePixels(resizedWidth, resizedHeight)} Мп</p>
-          </div>
-          <button onClick={handleResize}>Применить</button>
-          <button style={{marginLeft: '10px'}} onClick={onClose}>Закрыть</button>
-        </div>
-      </div>,
-      document.body
-    ) : null
-  );
+        </div>,
+        document.body
+      )
+    : null;
 };
 
 export default Modal;

@@ -255,11 +255,11 @@ const handleMouseDown = (e) => {
   
     const newWidth = resizedImageSize.width;
     const newHeight = resizedImageSize.height;
+    const newImageData = canvasRef.current.toDataURL('image/png');
+    setImageSrc(newImageData);
   
     if (newWidth && newHeight) {
       nearestNeighborResize(canvasRef.current, newWidth, newHeight);
-      const newImageData = canvasRef.current.toDataURL('image/png');
-      setImageSrc(newImageData);
     }
   };
   

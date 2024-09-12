@@ -230,6 +230,3 @@ const Curves = ({ onClose, onApplyCorrection, imageData }) => {
 };
 
 export default Curves;
-
-
-
